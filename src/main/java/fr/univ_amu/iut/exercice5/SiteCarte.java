@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.exercice5;
 
+import java.io.IOException;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -78,6 +79,17 @@ public class SiteCarte extends HBox {
     // 3. Lui dire que le contrôleur doit être CET objet aussi : loader.setController(this).
     // 4. Appeler loader.load() (qui peut lever IOException, à propager via RuntimeException
     //    pour ne pas surcharger la signature du constructeur).
+    FXMLLoader loader = new FXMLLoader(getClass().getResource("SiteCarte.fxml"));
+    loader.setRoot(this);
+    loader.setController(this);
+
+    try {
+      loader.load();
+    } catch (IOException e) {
+      // On encapsule l'exception checked dans une RuntimeException
+      // pour ne pas forcer l'appelant à faire un try/catch à chaque instanciation
+      throw new RuntimeException("Erreur lors du chargement de SiteCarte.fxml", e);
+    }
   }
 
   /**
@@ -95,7 +107,16 @@ public class SiteCarte extends HBox {
     // 4. labelNbPassages.textProperty().bind(nombrePassages.asString().concat(" passages")).
     // 5. Installer un écouteur sur joursDepuisDernierPassage qui appelle majBadge(...) à chaque
     //    changement, puis appeler majBadge(...) une première fois avec la valeur courante pour
-    //    initialiser l'affichage.
+    //    initialiser l'affichage.labelCarre.textProperty().bind(numeroCarre);
+    labelCarre.textProperty().bind(numeroCarre);
+    labelNom.textProperty().bind(nomConvivial);
+    labelNbPoints.textProperty().bind(nombrePoints.asString().concat(" points d'écoute"));
+    labelNbPassages.textProperty().bind(nombrePassages.asString().concat(" passages"));
+    joursDepuisDernierPassage.addListener(
+        (observable, ancienneValeur, nouvelleValeur) -> {
+          majBadge(nouvelleValeur.intValue());
+        });
+    majBadge(joursDepuisDernierPassage.get());
   }
 
   /**
@@ -111,6 +132,20 @@ public class SiteCarte extends HBox {
     // - sinon si jours < 7 :  texte "Il y a Nj",  classe "badge-fresh"
     // - sinon si jours <= 30 :  texte "Il y a Nj", classe "badge-stale"
     // - sinon : texte "Il y a Nj", classe "badge-cold"
+    labelBadge.getStyleClass().removeAll("badge-fresh", "badge-stale", "badge-cold");
+    if (jours < 0) {
+      labelBadge.setText("Jamais utilisé");
+      labelBadge.getStyleClass().add("badge-cold");
+    } else if (jours < 7) {
+      labelBadge.setText("Il y a " + jours + "j");
+      labelBadge.getStyleClass().add("badge-fresh");
+    } else if (jours <= 30) {
+      labelBadge.setText("Il y a " + jours + "j");
+      labelBadge.getStyleClass().add("badge-stale");
+    } else {
+      labelBadge.setText("Il y a " + jours + "j");
+      labelBadge.getStyleClass().add("badge-cold");
+    }
   }
 
   // ---------------------------------------------------------------------
